@@ -38,7 +38,7 @@
   <p id="status">Reading response…</p>
 
   <div class="field">
-    <label for="authCode">Authorization code (if present)</label>
+    <label for="authCode">Sign-in value to paste into the plugin (code + security check)</label>
     <textarea id="authCode" readonly></textarea>
   </div>
 
@@ -73,21 +73,24 @@
       search.forEach(function (v, k) { all[k] = v; });
       hash.forEach(function (v, k) { all[k] = v; });
 
-      document.getElementById("authCode").value = code;
+      // "code#state": the plugin checks `state` to be sure this sign-in started there.
+      var state = search.get("state") || "";
+      var codeWithState = code && state ? code + "#" + state : "";
+      document.getElementById("authCode").value = codeWithState;
       document.getElementById("accessToken").value = token;
       document.getElementById("rawParams").value = JSON.stringify(all, null, 2);
 
       var status = document.getElementById("status");
       if (error) {
         status.textContent = "Google returned an error: " + error;
-      } else if (code || token) {
+      } else if (codeWithState) {
         status.textContent = "Success — copy the value below back into the plugin.";
       } else {
         status.textContent = "No code or token found in the redirect URL.";
       }
 
       document.getElementById("copyBtn").addEventListener("click", function () {
-        var value = code || token;
+        var value = codeWithState;
         if (!value) return;
         navigator.clipboard.writeText(value).then(function () {
           status.textContent = "Copied to clipboard.";
